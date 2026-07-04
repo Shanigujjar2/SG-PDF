@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta charset="utf-8">
+  <title>SG PDF — Strumenti PDF professionali</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: #101216; overflow-x: hidden; }
+    @keyframes sgFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes sgDrift1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(5vw,4vh) scale(1.12); } }
+    @keyframes sgDrift2 { 0%,100% { transform: translate(0,0) scale(1.08); } 50% { transform: translate(-6vw,-5vh) scale(0.94); } }
+    @keyframes sgSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes sgRipple { from { transform: translate(-50%,-50%) scale(0.2); opacity: 0.9; } to { transform: translate(-50%,-50%) scale(1.6); opacity: 0; } }
+    @media (pointer: fine) { * { cursor: none !important; } }
+  </style>
+</helmet>
+
+<div style="min-height:100vh;background:#101216;color:#f2f3f5;font-family:'Instrument Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased">
+
+  <!-- SFONDO ANIMATO -->
+  <div style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden">
+    <div style="position:absolute;top:-20vh;left:-15vw;width:60vw;height:60vw;border-radius:50%;background:radial-gradient(circle,rgba(224,45,64,0.14),transparent 62%);animation:sgDrift1 24s ease-in-out infinite"></div>
+    <div style="position:absolute;top:30vh;right:-20vw;width:55vw;height:55vw;border-radius:50%;background:radial-gradient(circle,rgba(120,140,180,0.10),transparent 62%);animation:sgDrift2 30s ease-in-out infinite"></div>
+    <div style="position:absolute;bottom:-25vh;left:10vw;width:50vw;height:50vw;border-radius:50%;background:radial-gradient(circle,rgba(224,45,64,0.09),transparent 62%);animation:sgDrift1 36s ease-in-out infinite reverse"></div>
+    <div style="position:absolute;top:50%;left:50%;width:160vmax;height:160vmax;margin:-80vmax 0 0 -80vmax;background:repeating-conic-gradient(from 0deg,transparent 0deg,transparent 24deg,rgba(224,45,64,0.03) 30deg,transparent 36deg);animation:sgSpin 140s linear infinite"></div>
+    <canvas ref="{{ bgRef }}" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+  </div>
+
+  <!-- CURSORE PERSONALIZZATO -->
+  <div ref="{{ curRef }}" style="position:fixed;left:0;top:0;width:0;height:0;z-index:9999;pointer-events:none">
+    <div data-cur="ring" style="position:fixed;left:0;top:0;width:38px;height:38px;border:1.5px dashed rgba(224,45,64,0.85);border-radius:50%;transform:translate(-200px,-200px);will-change:transform"></div>
+    <div data-cur="dot" style="position:fixed;left:0;top:0;width:7px;height:7px;background:#E02D40;border-radius:50%;transform:translate(-200px,-200px);box-shadow:0 0 14px rgba(224,45,64,0.95);will-change:transform"></div>
+  </div>
+
+  <!-- NAV -->
+  <nav style="position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 40px;background:rgba(16,18,22,0.85);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.07)">
+    <a href="#top" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#f2f3f5">
+      <span style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:#ffffff;overflow:hidden;flex-shrink:0">
+        <img src="assets/logo.png" alt="SG PDF" style="width:53px;height:53px;object-fit:contain">
+      </span>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:0.02em">SG&nbsp;PDF</span>
+    </a>
+    <div style="display:flex;align-items:center;gap:26px">
+      <a href="#tools" style="color:#b8bdc7;text-decoration:none;font-size:15px;font-weight:500" style-hover="color:#ffffff">{{ t.navTools }}</a>
+      <a href="#pricing" style="color:#b8bdc7;text-decoration:none;font-size:15px;font-weight:500" style-hover="color:#ffffff">{{ t.navPricing }}</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="display:flex;gap:2px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:3px">
+        <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="5">
+          <button onClick="{{ lg.pick }}" style="border:none;cursor:pointer;padding:5px 9px;border-radius:6px;font-size:12.5px;font-weight:600;font-family:'Instrument Sans',sans-serif;background:{{ lg.bg }};color:{{ lg.fg }}">{{ lg.code }}</button>
+        </sc-for>
+      </div>
+      <a href="#download" style="display:inline-flex;align-items:center;gap:8px;background:{{ accent }};color:#ffffff;text-decoration:none;font-weight:600;font-size:14.5px;padding:10px 18px;border-radius:9px" style-hover="filter:brightness(1.12)">{{ t.navDownload }}</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header id="top" style="position:relative;z-index:1;overflow:hidden;padding:90px 40px 100px">
+    <div style="position:absolute;top:-220px;right:-140px;width:640px;height:640px;border-radius:50%;background:radial-gradient(circle,rgba(224,45,64,0.16),transparent 65%);pointer-events:none"></div>
+    <div style="max-width:1160px;margin:0 auto;display:grid;grid-template-columns:1.15fr 0.85fr;gap:60px;align-items:center">
+      <div data-reveal="left">
+        <div style="display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(224,45,64,0.45);background:rgba(224,45,64,0.1);color:#ff8f9a;font-size:13.5px;font-weight:600;padding:7px 14px;border-radius:999px;margin-bottom:26px">
+          <span style="width:8px;height:8px;border-radius:50%;background:{{ accent }};flex-shrink:0"></span>
+          {{ t.badge }}
+        </div>
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:60px;line-height:1.05;font-weight:700;margin:0 0 22px;letter-spacing:-0.02em;text-wrap:balance">{{ t.heroTitle }}</h1>
+        <p style="font-size:19px;line-height:1.6;color:#b8bdc7;margin:0 0 36px;max-width:520px;text-wrap:pretty">{{ t.heroSub }}</p>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+          <a href="#" style="display:inline-flex;align-items:center;gap:10px;background:{{ accent }};color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:14px 24px;border-radius:11px;box-shadow:0 8px 28px rgba(224,45,64,0.35)" style-hover="filter:brightness(1.12)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"></path></svg>
+            {{ t.ctaMac }}
+          </a>
+          <a href="#" style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);color:#f2f3f5;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:11px" style-hover="background:rgba(255,255,255,0.12)">{{ t.ctaWin }}</a>
+          <a href="#" style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);color:#f2f3f5;text-decoration:none;font-weight:600;font-size:16px;padding:14px 22px;border-radius:11px" style-hover="background:rgba(255,255,255,0.12)">{{ t.ctaLinux }}</a>
+        </div>
+        <p style="font-size:14px;color:#8b919c;margin:0">{{ t.heroNote }}</p>
+      </div>
+      <div data-reveal="zoom-rot" style="display:flex;justify-content:center">
+        <div style="position:relative;width:340px;height:340px">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+            <div style="width:230px;height:230px;border-radius:52px;background:#ffffff;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(224,45,64,0.3),0 4px 20px rgba(0,0,0,0.5);animation:sgFloat 6s ease-in-out infinite">
+              <img src="assets/logo.png" alt="SG PDF logo" style="width:306px;height:306px;object-fit:contain">
+            </div>
+          </div>
+          <div style="position:absolute;top:6px;left:-14px;display:flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:15px;background:#e0564f;box-shadow:0 10px 24px rgba(0,0,0,0.4);animation:sgFloat 5s ease-in-out infinite">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M12 20h9 M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+          </div>
+          <div style="position:absolute;bottom:24px;left:-30px;display:flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:15px;background:#4a90d9;box-shadow:0 10px 24px rgba(0,0,0,0.4);animation:sgFloat 7s ease-in-out infinite">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M4 14h6v6 M20 10h-6V4 M14 10l7-7 M3 21l7-7"></path></svg>
+          </div>
+          <div style="position:absolute;top:40px;right:-18px;display:flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:15px;background:#6b7a99;box-shadow:0 10px 24px rgba(0,0,0,0.4);animation:sgFloat 6.5s ease-in-out infinite">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M5 11h14v10H5Z M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+          </div>
+          <div style="position:absolute;bottom:-6px;right:10px;display:flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:15px;background:#2fa98c;box-shadow:0 10px 24px rgba(0,0,0,0.4);animation:sgFloat 5.5s ease-in-out infinite">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M3 7V5a2 2 0 0 1 2-2h2 M17 3h2a2 2 0 0 1 2 2v2 M21 17v2a2 2 0 0 1-2 2h-2 M7 21H5a2 2 0 0 1-2-2v-2 M7 8h8 M7 12h10 M7 16h6"></path></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PRIVACY STRIP -->
+  <section style="position:relative;z-index:1;border-top:1px solid rgba(255,255,255,0.07);border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(20,23,28,0.55)">
+    <div style="max-width:1160px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:40px;padding:44px 40px">
+      <div data-reveal="left" style="display:flex;gap:16px;align-items:flex-start">
+        <div style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:rgba(224,45,64,0.14);flex-shrink:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="{{ accent }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Z"></path></svg>
+        </div>
+        <div>
+          <h3 style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;margin:0 0 6px">{{ t.priv1t }}</h3>
+          <p style="font-size:14.5px;line-height:1.55;color:#9aa0aa;margin:0;text-wrap:pretty">{{ t.priv1d }}</p>
+        </div>
+      </div>
+      <div data-reveal="zoom" style="display:flex;gap:16px;align-items:flex-start">
+        <div style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:rgba(224,45,64,0.14);flex-shrink:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="{{ accent }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8Z"></path></svg>
+        </div>
+        <div>
+          <h3 style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;margin:0 0 6px">{{ t.priv2t }}</h3>
+          <p style="font-size:14.5px;line-height:1.55;color:#9aa0aa;margin:0;text-wrap:pretty">{{ t.priv2d }}</p>
+        </div>
+      </div>
+      <div data-reveal="right" style="display:flex;gap:16px;align-items:flex-start">
+        <div style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:rgba(224,45,64,0.14);flex-shrink:0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="{{ accent }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z M3 12h18 M12 3a15 15 0 0 1 4 9 15 15 0 0 1-4 9 15 15 0 0 1-4-9 15 15 0 0 1 4-9Z"></path></svg>
+        </div>
+        <div>
+          <h3 style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;margin:0 0 6px">{{ t.priv3t }}</h3>
+          <p style="font-size:14.5px;line-height:1.55;color:#9aa0aa;margin:0;text-wrap:pretty">{{ t.priv3d }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+  <section id="tools" style="position:relative;z-index:1;padding:96px 40px">
+    <div style="max-width:1160px;margin:0 auto">
+      <h2 data-reveal="left" style="font-family:'Space Grotesk',sans-serif;font-size:42px;font-weight:700;margin:0 0 14px;letter-spacing:-0.02em;text-wrap:balance">{{ t.toolsTitle }}</h2>
+      <p data-reveal="right" style="font-size:18px;color:#b8bdc7;margin:0 0 56px;max-width:560px;text-wrap:pretty">{{ t.toolsSub }}</p>
+      <div style="display:flex;flex-direction:column;gap:52px">
+        <sc-for list="{{ categories }}" as="cat" hint-placeholder-count="6">
+          <div data-reveal="{{ cat.dir }}">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+              <h3 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:600;margin:0">{{ cat.name }}</h3>
+              <span style="font-size:13px;font-weight:600;color:#8b919c;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);padding:3px 10px;border-radius:999px">{{ cat.count }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px">
+              <sc-for list="{{ cat.tools }}" as="tool" hint-placeholder-count="4">
+                <div style="background:#181b21;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px;transition:transform 0.15s ease,border-color 0.15s ease" style-hover="transform:translateY(-3px);border-color:rgba(224,45,64,0.5)">
+                  <div style="display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:13px;background:{{ tool.color }};margin-bottom:16px">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="{{ tool.icon }}"></path></svg>
+                  </div>
+                  <h4 style="font-family:'Space Grotesk',sans-serif;font-size:16.5px;font-weight:600;margin:0 0 6px">{{ tool.name }}</h4>
+                  <p style="font-size:14px;line-height:1.5;color:#9aa0aa;margin:0;text-wrap:pretty">{{ tool.desc }}</p>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" style="position:relative;z-index:1;padding:40px 40px 110px">
+    <div style="max-width:1160px;margin:0 auto;text-align:center">
+      <h2 data-reveal="zoom" style="font-family:'Space Grotesk',sans-serif;font-size:42px;font-weight:700;margin:0 0 14px;letter-spacing:-0.02em">{{ t.pricingTitle }}</h2>
+      <p data-reveal="up" style="font-size:18px;color:#b8bdc7;margin:0 0 52px">{{ t.pricingSub }}</p>
+      <div data-reveal="flip" style="max-width:420px;margin:0 auto;background:linear-gradient(180deg,#1c2027,#171a20);border:1px solid rgba(224,45,64,0.4);border-radius:22px;padding:40px 36px;box-shadow:0 24px 70px rgba(224,45,64,0.14);text-align:left">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px">
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600">{{ t.planName }}</span>
+          <span style="font-size:12.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#ff8f9a;background:rgba(224,45,64,0.14);border:1px solid rgba(224,45,64,0.4);padding:5px 11px;border-radius:999px">{{ t.planBadge }}</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:28px">
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:54px;font-weight:700;letter-spacing:-0.02em">{{ t.price }}</span>
+          <span style="font-size:17px;color:#9aa0aa">{{ t.per }}</span>
+        </div>
+        <ul style="list-style:none;margin:0 0 32px;padding:0;display:flex;flex-direction:column;gap:13px">
+          <sc-for list="{{ features }}" as="f" hint-placeholder-count="5">
+            <li style="display:flex;align-items:center;gap:11px;font-size:15px;color:#d5d8de">
+              <svg viewBox="0 0 24 24" fill="none" stroke="{{ accent }}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;flex-shrink:0"><path d="M20 6L9 17l-5-5"></path></svg>
+              {{ f.label }}
+            </li>
+          </sc-for>
+        </ul>
+        <a href="#download" style="display:flex;align-items:center;justify-content:center;gap:9px;background:{{ accent }};color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:15px 20px;border-radius:12px" style-hover="filter:brightness(1.12)">{{ t.pricingCta }}</a>
+        <p style="text-align:center;font-size:13.5px;color:#8b919c;margin:16px 0 0">{{ t.cancelNote }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section id="download" style="position:relative;z-index:1;border-top:1px solid rgba(255,255,255,0.07);background:linear-gradient(180deg,rgba(20,23,28,0.7),rgba(16,18,22,0.35));padding:100px 40px">
+    <div data-reveal="zoom-rot" style="max-width:760px;margin:0 auto;text-align:center">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:74px;height:74px;border-radius:20px;background:#ffffff;overflow:hidden;margin-bottom:28px">
+        <img src="assets/logo.png" alt="SG PDF" style="width:101px;height:101px;object-fit:contain">
+      </div>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:40px;font-weight:700;margin:0 0 14px;letter-spacing:-0.02em;text-wrap:balance">{{ t.dlTitle }}</h2>
+      <p style="font-size:18px;color:#b8bdc7;margin:0 0 40px">{{ t.dlSub }}</p>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:14px">
+        <a href="#" style="display:inline-flex;align-items:center;gap:10px;background:{{ accent }};color:#ffffff;text-decoration:none;font-weight:600;font-size:16px;padding:15px 26px;border-radius:12px;box-shadow:0 8px 28px rgba(224,45,64,0.3)" style-hover="filter:brightness(1.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"></path></svg>
+          macOS
+        </a>
+        <a href="#" style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);color:#f2f3f5;text-decoration:none;font-weight:600;font-size:16px;padding:15px 26px;border-radius:12px" style-hover="background:rgba(255,255,255,0.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"></path></svg>
+          Windows
+        </a>
+        <a href="#" style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);color:#f2f3f5;text-decoration:none;font-weight:600;font-size:16px;padding:15px 26px;border-radius:12px" style-hover="background:rgba(255,255,255,0.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3"></path></svg>
+          Linux
+        </a>
+      </div>
+      <p style="font-size:14px;color:#8b919c;margin:24px 0 0">{{ t.dlNote }}</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="position:relative;z-index:1;border-top:1px solid rgba(255,255,255,0.07);padding:34px 40px">
+    <div style="max-width:1160px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:#ffffff;overflow:hidden">
+          <img src="assets/logo.png" alt="SG PDF" style="width:41px;height:41px;object-fit:contain">
+        </span>
+        <span style="font-size:14px;color:#9aa0aa">{{ t.footerTag }}</span>
+      </div>
+      <span style="font-size:13.5px;color:#6f7580">{{ t.rights }}</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultLang&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;it&quot;, &quot;options&quot;: [&quot;it&quot;, &quot;en&quot;, &quot;es&quot;, &quot;fr&quot;, &quot;de&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Contenuto&quot;}, &quot;accent&quot;: {&quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#E02D40&quot;, &quot;options&quot;: [&quot;#E02D40&quot;, &quot;#C41E30&quot;, &quot;#F04353&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Stile&quot;}}">
+class Component extends DCLogic {
+  state = { lang: null };
+
+  componentDidMount() {
+    try {
+      const saved = localStorage.getItem('sgpdf-lang');
+      if (saved && this.TR[saved]) this.setState({ lang: saved });
+    } catch (e) {}
+    this._setupReveal();
+  }
+
+  componentWillUnmount() {
+    if (this._io) this._io.disconnect();
+    if (this._mo) this._mo.disconnect();
+    if (this._raf) cancelAnimationFrame(this._raf);
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._curRaf) cancelAnimationFrame(this._curRaf);
+    if (this._onMove) window.removeEventListener('mousemove', this._onMove);
+    if (this._onDown) window.removeEventListener('mousedown', this._onDown);
+  }
+
+  _initCursor(el) {
+    if (!el || el === this._curEl) return;
+    this._curEl = el;
+    if (this._curRaf) cancelAnimationFrame(this._curRaf);
+    if (this._onMove) window.removeEventListener('mousemove', this._onMove);
+    if (this._onDown) window.removeEventListener('mousedown', this._onDown);
+    if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) {
+      el.style.display = 'none';
+      return;
+    }
+    const ring = el.querySelector('[data-cur="ring"]');
+    const dot = el.querySelector('[data-cur="dot"]');
+    const s = { x: -200, y: -200, rx: -200, ry: -200, hot: false, ang: 0, seen: false };
+    this._onMove = (e) => {
+      s.x = e.clientX; s.y = e.clientY; s.seen = true;
+      s.hot = !!(e.target && e.target.closest && e.target.closest('a, button'));
+    };
+    this._onDown = (e) => {
+      const r = document.createElement('div');
+      r.style.cssText = 'position:fixed;left:' + e.clientX + 'px;top:' + e.clientY + 'px;width:70px;height:70px;border:2px solid rgba(224,45,64,0.9);border-radius:50%;pointer-events:none;animation:sgRipple 0.55s ease-out forwards';
+      el.appendChild(r);
+      setTimeout(() => r.remove(), 600);
+    };
+    window.addEventListener('mousemove', this._onMove);
+    window.addEventListener('mousedown', this._onDown);
+    const loop = () => {
+      s.rx += (s.x - s.rx) * 0.16;
+      s.ry += (s.y - s.ry) * 0.16;
+      s.ang += s.hot ? 3.2 : 1.1;
+      if (s.seen) {
+        const rs = s.hot ? 1.75 : 1;
+        const ds = s.hot ? 0.45 : 1;
+        ring.style.transform = 'translate(' + (s.rx - 19) + 'px,' + (s.ry - 19) + 'px) rotate(' + s.ang + 'deg) scale(' + rs + ')';
+        ring.style.borderColor = s.hot ? 'rgba(224,45,64,1)' : 'rgba(224,45,64,0.85)';
+        dot.style.transform = 'translate(' + (s.x - 3.5) + 'px,' + (s.y - 3.5) + 'px) scale(' + ds + ')';
+      }
+      this._curRaf = requestAnimationFrame(loop);
+    };
+    this._curRaf = requestAnimationFrame(loop);
+  }
+
+  _initCanvas(el) {
+    if (!el || el === this._cv) return;
+    this._cv = el;
+    if (this._raf) cancelAnimationFrame(this._raf);
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    const ctx = el.getContext('2d');
+    const st = { w: 0, h: 0, parts: [], pages: [] };
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const resize = () => {
+      st.w = el.width = Math.max(1, el.offsetWidth * dpr);
+      st.h = el.height = Math.max(1, el.offsetHeight * dpr);
+    };
+    this._onResize = resize;
+    window.addEventListener('resize', resize);
+    resize();
+    const R = (a, b) => a + Math.random() * (b - a);
+    for (let i = 0; i < 70; i++) {
+      st.parts.push({ x: Math.random(), y: Math.random(), r: R(0.6, 2.4), s: R(0.00025, 0.0011), ph: R(0, 6.28), amp: R(8, 34), red: Math.random() < 0.6, a: R(0.2, 0.7) });
+    }
+    for (let i = 0; i < 8; i++) {
+      st.pages.push({ x: R(0.03, 0.97), y: Math.random(), w: R(26, 58), rot: R(-0.5, 0.5), s: R(0.00012, 0.0004), vr: R(-0.0012, 0.0012), a: R(0.06, 0.14) });
+    }
+    const draw = (t) => {
+      ctx.clearRect(0, 0, st.w, st.h);
+      const sy = window.scrollY || 0;
+      for (const p of st.parts) {
+        p.y -= p.s;
+        if (p.y < -0.05) { p.y = 1.05; p.x = Math.random(); }
+        const px = p.x * st.w + Math.sin(t / 2200 + p.ph) * p.amp * dpr;
+        let py = (p.y * st.h - sy * p.r * 0.09 * dpr) % st.h;
+        if (py < 0) py += st.h;
+        ctx.beginPath();
+        ctx.arc(px, py, p.r * dpr, 0, 6.284);
+        ctx.fillStyle = p.red ? 'rgba(224,45,64,' + p.a + ')' : 'rgba(255,255,255,' + (p.a * 0.45) + ')';
+        ctx.shadowColor = p.red ? 'rgba(224,45,64,0.9)' : 'rgba(255,255,255,0.6)';
+        ctx.shadowBlur = 9 * dpr;
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+      for (const g of st.pages) {
+        g.y -= g.s;
+        g.rot += g.vr;
+        if (g.y < -0.12) { g.y = 1.12; g.x = R(0.03, 0.97); }
+        const w = g.w * dpr, h = w * 1.35;
+        const gx = g.x * st.w + Math.sin(t / 3600 + g.w) * 14 * dpr;
+        let gy = (g.y * st.h - sy * 0.16 * dpr) % (st.h * 1.24);
+        if (gy < 0) gy += st.h * 1.24;
+        gy -= st.h * 0.12;
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.rotate(g.rot);
+        ctx.strokeStyle = 'rgba(224,45,64,' + g.a + ')';
+        ctx.lineWidth = 1.2 * dpr;
+        ctx.strokeRect(-w / 2, -h / 2, w, h);
+        ctx.beginPath();
+        ctx.moveTo(w / 2 - w * 0.3, -h / 2);
+        ctx.lineTo(w / 2, -h / 2 + w * 0.3);
+        ctx.moveTo(-w / 2 + w * 0.16, -h / 2 + h * 0.28);
+        ctx.lineTo(w / 2 - w * 0.16, -h / 2 + h * 0.28);
+        ctx.moveTo(-w / 2 + w * 0.16, -h / 2 + h * 0.46);
+        ctx.lineTo(w / 2 - w * 0.16, -h / 2 + h * 0.46);
+        ctx.moveTo(-w / 2 + w * 0.16, -h / 2 + h * 0.64);
+        ctx.lineTo(-w / 2 + w * 0.5, -h / 2 + h * 0.64);
+        ctx.stroke();
+        ctx.restore();
+      }
+      this._raf = requestAnimationFrame(draw);
+    };
+    this._raf = requestAnimationFrame(draw);
+  }
+
+  _setupReveal() {
+    if (this._io) this._io.disconnect();
+    if (this._mo) this._mo.disconnect();
+    const ease = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
+    const hiddenT = (el, belowViewport) => {
+      const mode = el.getAttribute('data-reveal') || '';
+      switch (mode) {
+        case 'left': return 'translateX(-110px)';
+        case 'right': return 'translateX(110px)';
+        case 'up': return 'translateY(-70px)';
+        case 'zoom': return 'translateY(34px) scale(0.7)';
+        case 'zoom-rot': return 'scale(0.78) rotate(-7deg)';
+        case 'flip': return 'perspective(900px) rotateX(32deg) translateY(56px) scale(0.92)';
+        default: return belowViewport ? 'translateY(60px)' : 'translateY(-60px)';
+      }
+    };
+    const io = new IntersectionObserver((entries) => {
+      const entering = entries.filter((en) => en.isIntersecting);
+      const leaving = entries.filter((en) => !en.isIntersecting);
+      entering.forEach((en, i) => {
+        const el = en.target;
+        const delay = Math.min(i * 110, 550);
+        el.style.transition = 'opacity 0.9s ' + ease + ' ' + delay + 'ms, transform 0.9s ' + ease + ' ' + delay + 'ms';
+        el.style.opacity = '1';
+        el.style.transform = 'translate(0px, 0px) scale(1) rotate(0deg)';
+      });
+      leaving.forEach((en) => {
+        const el = en.target;
+        el.style.transition = 'none';
+        el.style.opacity = '0';
+        el.style.transform = hiddenT(el, en.boundingClientRect.top > 0);
+      });
+    }, { threshold: 0.12 });
+    this._io = io;
+    const scan = () => {
+      document.querySelectorAll('[data-reveal]:not([data-rv-on])').forEach((el) => {
+        el.setAttribute('data-rv-on', '1');
+        el.style.opacity = '0';
+        el.style.transform = hiddenT(el, el.getBoundingClientRect().top > (window.innerHeight || 0) / 2);
+        el.style.willChange = 'opacity, transform';
+        io.observe(el);
+      });
+    };
+    scan();
+    this._mo = new MutationObserver(scan);
+    this._mo.observe(document.body, { childList: true, subtree: true });
+  }
+
+  get TR() {
+    return {
+      it: {
+        ui: {
+          navTools: 'Strumenti', navPricing: 'Prezzi', navDownload: 'Scarica',
+          badge: '100% offline — i tuoi file non lasciano mai il tuo computer',
+          heroTitle: 'Tutti gli strumenti PDF. Una sola app.',
+          heroSub: 'Modifica, organizza, converti e proteggi i tuoi PDF con 22 strumenti professionali. Tutto in locale, senza upload, senza attese.',
+          ctaMac: 'Scarica per macOS', ctaWin: 'Windows', ctaLinux: 'Linux',
+          heroNote: '4,99 €/mese · macOS, Windows e Linux · Interfaccia in 5 lingue',
+          priv1t: 'Nessun upload', priv1d: 'Ogni operazione avviene sul tuo dispositivo. I tuoi documenti restano solo tuoi.',
+          priv2t: 'Velocità nativa', priv2d: 'Niente code, niente attese: risultati immediati anche con file pesanti.',
+          priv3t: '5 lingue', priv3d: 'Interfaccia completa in italiano, inglese, spagnolo, francese e tedesco.',
+          toolsTitle: '22 strumenti. Zero compromessi.',
+          toolsSub: 'Tutto quello che ti serve per dominare i tuoi PDF, in un\'unica app.',
+          pricingTitle: 'Un prezzo. Tutto incluso.',
+          pricingSub: 'Nessun costo nascosto, nessuno strumento bloccato.',
+          planName: 'SG PDF Completo', planBadge: 'Tutto incluso',
+          price: '4,99 €', per: '/mese',
+          pricingCta: 'Scarica e inizia ora', cancelNote: 'Disdici quando vuoi.',
+          dlTitle: 'Pronto a prendere il controllo dei tuoi PDF?',
+          dlSub: 'Scarica SG PDF per il tuo sistema operativo.',
+          dlNote: 'Versione 1.0 · I link di download saranno presto disponibili',
+          footerTag: 'Tutti gli strumenti per i tuoi PDF — modifica, organizza, converti, proteggi.',
+          rights: '© 2026 SG PDF. Tutti i diritti riservati.'
+        },
+        feats: ['Tutti i 22 strumenti', 'Elaborazione 100% locale', 'macOS, Windows e Linux', 'Aggiornamenti inclusi', 'Interfaccia in 5 lingue'],
+        cats: { edit: 'Modifica', org: 'Organizza', ocr: 'OCR e contenuti', sec: 'Sicurezza e dimensioni', from: 'Converti da PDF', to: 'Converti in PDF' },
+        tools: {
+          edit: ['Modifica PDF', 'Testo, annotazioni, firma e ricerca'],
+          merge: ['Unisci PDF', 'Combina più PDF in uno'],
+          split: ['Dividi PDF', 'Una pagina per file'],
+          remove: ['Rimuovi Pagine', 'Elimina pagine indesiderate'],
+          organize: ['Organizza PDF', 'Riordina le pagine'],
+          rotate: ['Ruota Pagine', 'Ruota di 90°, 180°, 270°'],
+          watermark: ['Filigrana', 'Testo in sovraimpressione'],
+          pagenum: ['Numeri di Pagina', 'Numera le pagine'],
+          ocr: ['OCR — PDF Ricercabile', 'Rendi ricercabili le scansioni'],
+          extract: ['Estrai Testo', 'Esporta il testo in .txt'],
+          compress: ['Comprimi PDF', 'Riduci le dimensioni del file'],
+          protect: ['Proteggi PDF', 'Aggiungi una password'],
+          unlock: ['Sblocca PDF', 'Rimuovi la password'],
+          tojpg: ['PDF in JPG', 'Ogni pagina un\'immagine'],
+          toword: ['PDF in Word', 'Documento modificabile'],
+          toppt: ['PDF in PowerPoint', 'Una slide per pagina'],
+          toexcel: ['PDF in Excel', 'Estrai testo in tabella'],
+          topdfa: ['PDF in PDF/A', 'Formato di archiviazione'],
+          imgpdf: ['Immagine a PDF', 'JPG, PNG, HEIC e altro'],
+          wordpdf: ['Word in PDF', '.doc e .docx'],
+          pptpdf: ['PowerPoint in PDF', '.ppt e .pptx'],
+          excelpdf: ['Excel in PDF', '.xls e .xlsx']
+        }
+      },
+      en: {
+        ui: {
+          navTools: 'Tools', navPricing: 'Pricing', navDownload: 'Download',
+          badge: '100% offline — your files never leave your computer',
+          heroTitle: 'Every PDF tool. One single app.',
+          heroSub: 'Edit, organize, convert and protect your PDFs with 22 professional tools. Everything runs locally — no uploads, no waiting.',
+          ctaMac: 'Download for macOS', ctaWin: 'Windows', ctaLinux: 'Linux',
+          heroNote: '€4.99/month · macOS, Windows and Linux · Interface in 5 languages',
+          priv1t: 'No uploads', priv1d: 'Every operation happens on your device. Your documents stay yours alone.',
+          priv2t: 'Native speed', priv2d: 'No queues, no waiting: instant results even with heavy files.',
+          priv3t: '5 languages', priv3d: 'Full interface in English, Italian, Spanish, French and German.',
+          toolsTitle: '22 tools. Zero compromises.',
+          toolsSub: 'Everything you need to master your PDFs, in a single app.',
+          pricingTitle: 'One price. Everything included.',
+          pricingSub: 'No hidden costs, no locked tools.',
+          planName: 'SG PDF Complete', planBadge: 'All included',
+          price: '€4.99', per: '/month',
+          pricingCta: 'Download and start now', cancelNote: 'Cancel anytime.',
+          dlTitle: 'Ready to take control of your PDFs?',
+          dlSub: 'Download SG PDF for your operating system.',
+          dlNote: 'Version 1.0 · Download links coming soon',
+          footerTag: 'All the tools for your PDFs — edit, organize, convert, protect.',
+          rights: '© 2026 SG PDF. All rights reserved.'
+        },
+        feats: ['All 22 tools', '100% local processing', 'macOS, Windows and Linux', 'Updates included', 'Interface in 5 languages'],
+        cats: { edit: 'Edit', org: 'Organize', ocr: 'OCR & content', sec: 'Security & size', from: 'Convert from PDF', to: 'Convert to PDF' },
+        tools: {
+          edit: ['Edit PDF', 'Text, annotations, signature and search'],
+          merge: ['Merge PDF', 'Combine multiple PDFs into one'],
+          split: ['Split PDF', 'One page per file'],
+          remove: ['Remove Pages', 'Delete unwanted pages'],
+          organize: ['Organize PDF', 'Reorder pages'],
+          rotate: ['Rotate Pages', 'Rotate by 90°, 180°, 270°'],
+          watermark: ['Watermark', 'Overlay text'],
+          pagenum: ['Page Numbers', 'Number your pages'],
+          ocr: ['OCR — Searchable PDF', 'Make scans searchable'],
+          extract: ['Extract Text', 'Export text to .txt'],
+          compress: ['Compress PDF', 'Reduce file size'],
+          protect: ['Protect PDF', 'Add a password'],
+          unlock: ['Unlock PDF', 'Remove the password'],
+          tojpg: ['PDF to JPG', 'Every page as an image'],
+          toword: ['PDF to Word', 'Editable document'],
+          toppt: ['PDF to PowerPoint', 'One slide per page'],
+          toexcel: ['PDF to Excel', 'Extract text into tables'],
+          topdfa: ['PDF to PDF/A', 'Archival format'],
+          imgpdf: ['Image to PDF', 'JPG, PNG, HEIC and more'],
+          wordpdf: ['Word to PDF', '.doc and .docx'],
+          pptpdf: ['PowerPoint to PDF', '.ppt and .pptx'],
+          excelpdf: ['Excel to PDF', '.xls and .xlsx']
+        }
+      },
+      es: {
+        ui: {
+          navTools: 'Herramientas', navPricing: 'Precios', navDownload: 'Descargar',
+          badge: '100% sin conexión — tus archivos nunca salen de tu ordenador',
+          heroTitle: 'Todas las herramientas PDF. Una sola app.',
+          heroSub: 'Edita, organiza, convierte y protege tus PDF con 22 herramientas profesionales. Todo en local, sin subidas, sin esperas.',
+          ctaMac: 'Descargar para macOS', ctaWin: 'Windows', ctaLinux: 'Linux',
+          heroNote: '4,99 €/mes · macOS, Windows y Linux · Interfaz en 5 idiomas',
+          priv1t: 'Sin subidas', priv1d: 'Cada operación ocurre en tu dispositivo. Tus documentos son solo tuyos.',
+          priv2t: 'Velocidad nativa', priv2d: 'Sin colas ni esperas: resultados inmediatos incluso con archivos pesados.',
+          priv3t: '5 idiomas', priv3d: 'Interfaz completa en español, inglés, italiano, francés y alemán.',
+          toolsTitle: '22 herramientas. Cero compromisos.',
+          toolsSub: 'Todo lo que necesitas para dominar tus PDF, en una sola app.',
+          pricingTitle: 'Un precio. Todo incluido.',
+          pricingSub: 'Sin costes ocultos, sin herramientas bloqueadas.',
+          planName: 'SG PDF Completo', planBadge: 'Todo incluido',
+          price: '4,99 €', per: '/mes',
+          pricingCta: 'Descarga y empieza ya', cancelNote: 'Cancela cuando quieras.',
+          dlTitle: '¿Listo para tomar el control de tus PDF?',
+          dlSub: 'Descarga SG PDF para tu sistema operativo.',
+          dlNote: 'Versión 1.0 · Enlaces de descarga próximamente',
+          footerTag: 'Todas las herramientas para tus PDF — edita, organiza, convierte, protege.',
+          rights: '© 2026 SG PDF. Todos los derechos reservados.'
+        },
+        feats: ['Las 22 herramientas', 'Procesamiento 100% local', 'macOS, Windows y Linux', 'Actualizaciones incluidas', 'Interfaz en 5 idiomas'],
+        cats: { edit: 'Editar', org: 'Organizar', ocr: 'OCR y contenido', sec: 'Seguridad y tamaño', from: 'Convertir desde PDF', to: 'Convertir a PDF' },
+        tools: {
+          edit: ['Editar PDF', 'Texto, anotaciones, firma y búsqueda'],
+          merge: ['Unir PDF', 'Combina varios PDF en uno'],
+          split: ['Dividir PDF', 'Una página por archivo'],
+          remove: ['Eliminar Páginas', 'Borra páginas no deseadas'],
+          organize: ['Organizar PDF', 'Reordena las páginas'],
+          rotate: ['Rotar Páginas', 'Rota 90°, 180°, 270°'],
+          watermark: ['Marca de Agua', 'Texto superpuesto'],
+          pagenum: ['Números de Página', 'Numera las páginas'],
+          ocr: ['OCR — PDF con Búsqueda', 'Haz que tus escaneos sean buscables'],
+          extract: ['Extraer Texto', 'Exporta el texto a .txt'],
+          compress: ['Comprimir PDF', 'Reduce el tamaño del archivo'],
+          protect: ['Proteger PDF', 'Añade una contraseña'],
+          unlock: ['Desbloquear PDF', 'Elimina la contraseña'],
+          tojpg: ['PDF a JPG', 'Cada página una imagen'],
+          toword: ['PDF a Word', 'Documento editable'],
+          toppt: ['PDF a PowerPoint', 'Una diapositiva por página'],
+          toexcel: ['PDF a Excel', 'Extrae texto en tablas'],
+          topdfa: ['PDF a PDF/A', 'Formato de archivo'],
+          imgpdf: ['Imagen a PDF', 'JPG, PNG, HEIC y más'],
+          wordpdf: ['Word a PDF', '.doc y .docx'],
+          pptpdf: ['PowerPoint a PDF', '.ppt y .pptx'],
+          excelpdf: ['Excel a PDF', '.xls y .xlsx']
+        }
+      },
+      fr: {
+        ui: {
+          navTools: 'Outils', navPricing: 'Tarifs', navDownload: 'Télécharger',
+          badge: '100% hors ligne — vos fichiers ne quittent jamais votre ordinateur',
+          heroTitle: 'Tous les outils PDF. Une seule app.',
+          heroSub: 'Modifiez, organisez, convertissez et protégez vos PDF avec 22 outils professionnels. Tout en local, sans upload, sans attente.',
+          ctaMac: 'Télécharger pour macOS', ctaWin: 'Windows', ctaLinux: 'Linux',
+          heroNote: '4,99 €/mois · macOS, Windows et Linux · Interface en 5 langues',
+          priv1t: 'Aucun upload', priv1d: 'Chaque opération se déroule sur votre appareil. Vos documents restent les vôtres.',
+          priv2t: 'Vitesse native', priv2d: 'Pas de file d\'attente : résultats immédiats même avec des fichiers lourds.',
+          priv3t: '5 langues', priv3d: 'Interface complète en français, anglais, italien, espagnol et allemand.',
+          toolsTitle: '22 outils. Zéro compromis.',
+          toolsSub: 'Tout ce qu\'il vous faut pour maîtriser vos PDF, dans une seule app.',
+          pricingTitle: 'Un prix. Tout inclus.',
+          pricingSub: 'Pas de coûts cachés, pas d\'outils verrouillés.',
+          planName: 'SG PDF Complet', planBadge: 'Tout inclus',
+          price: '4,99 €', per: '/mois',
+          pricingCta: 'Téléchargez et commencez', cancelNote: 'Résiliez à tout moment.',
+          dlTitle: 'Prêt à prendre le contrôle de vos PDF ?',
+          dlSub: 'Téléchargez SG PDF pour votre système d\'exploitation.',
+          dlNote: 'Version 1.0 · Liens de téléchargement bientôt disponibles',
+          footerTag: 'Tous les outils pour vos PDF — modifier, organiser, convertir, protéger.',
+          rights: '© 2026 SG PDF. Tous droits réservés.'
+        },
+        feats: ['Les 22 outils', 'Traitement 100% local', 'macOS, Windows et Linux', 'Mises à jour incluses', 'Interface en 5 langues'],
+        cats: { edit: 'Modifier', org: 'Organiser', ocr: 'OCR et contenu', sec: 'Sécurité et taille', from: 'Convertir depuis PDF', to: 'Convertir en PDF' },
+        tools: {
+          edit: ['Modifier PDF', 'Texte, annotations, signature et recherche'],
+          merge: ['Fusionner PDF', 'Combinez plusieurs PDF en un seul'],
+          split: ['Diviser PDF', 'Une page par fichier'],
+          remove: ['Supprimer des Pages', 'Éliminez les pages indésirables'],
+          organize: ['Organiser PDF', 'Réordonnez les pages'],
+          rotate: ['Pivoter les Pages', 'Rotation de 90°, 180°, 270°'],
+          watermark: ['Filigrane', 'Texte en surimpression'],
+          pagenum: ['Numéros de Page', 'Numérotez les pages'],
+          ocr: ['OCR — PDF Interrogeable', 'Rendez vos scans interrogeables'],
+          extract: ['Extraire le Texte', 'Exportez le texte en .txt'],
+          compress: ['Compresser PDF', 'Réduisez la taille du fichier'],
+          protect: ['Protéger PDF', 'Ajoutez un mot de passe'],
+          unlock: ['Déverrouiller PDF', 'Supprimez le mot de passe'],
+          tojpg: ['PDF en JPG', 'Chaque page en image'],
+          toword: ['PDF en Word', 'Document modifiable'],
+          toppt: ['PDF en PowerPoint', 'Une diapositive par page'],
+          toexcel: ['PDF en Excel', 'Extrayez le texte en tableau'],
+          topdfa: ['PDF en PDF/A', 'Format d\'archivage'],
+          imgpdf: ['Image en PDF', 'JPG, PNG, HEIC et plus'],
+          wordpdf: ['Word en PDF', '.doc et .docx'],
+          pptpdf: ['PowerPoint en PDF', '.ppt et .pptx'],
+          excelpdf: ['Excel en PDF', '.xls et .xlsx']
+        }
+      },
+      de: {
+        ui: {
+          navTools: 'Werkzeuge', navPricing: 'Preise', navDownload: 'Download',
+          badge: '100% offline — Ihre Dateien verlassen nie Ihren Computer',
+          heroTitle: 'Alle PDF-Werkzeuge. Eine einzige App.',
+          heroSub: 'Bearbeiten, organisieren, konvertieren und schützen Sie Ihre PDFs mit 22 professionellen Werkzeugen. Alles lokal — kein Upload, kein Warten.',
+          ctaMac: 'Für macOS herunterladen', ctaWin: 'Windows', ctaLinux: 'Linux',
+          heroNote: '4,99 €/Monat · macOS, Windows und Linux · Oberfläche in 5 Sprachen',
+          priv1t: 'Kein Upload', priv1d: 'Jede Operation läuft auf Ihrem Gerät. Ihre Dokumente bleiben nur Ihre.',
+          priv2t: 'Native Geschwindigkeit', priv2d: 'Keine Warteschlangen: sofortige Ergebnisse auch bei großen Dateien.',
+          priv3t: '5 Sprachen', priv3d: 'Vollständige Oberfläche auf Deutsch, Englisch, Italienisch, Spanisch und Französisch.',
+          toolsTitle: '22 Werkzeuge. Null Kompromisse.',
+          toolsSub: 'Alles, was Sie brauchen, um Ihre PDFs zu meistern — in einer einzigen App.',
+          pricingTitle: 'Ein Preis. Alles inklusive.',
+          pricingSub: 'Keine versteckten Kosten, keine gesperrten Werkzeuge.',
+          planName: 'SG PDF Komplett', planBadge: 'Alles inklusive',
+          price: '4,99 €', per: '/Monat',
+          pricingCta: 'Herunterladen und loslegen', cancelNote: 'Jederzeit kündbar.',
+          dlTitle: 'Bereit, Ihre PDFs zu beherrschen?',
+          dlSub: 'Laden Sie SG PDF für Ihr Betriebssystem herunter.',
+          dlNote: 'Version 1.0 · Download-Links folgen in Kürze',
+          footerTag: 'Alle Werkzeuge für Ihre PDFs — bearbeiten, organisieren, konvertieren, schützen.',
+          rights: '© 2026 SG PDF. Alle Rechte vorbehalten.'
+        },
+        feats: ['Alle 22 Werkzeuge', '100% lokale Verarbeitung', 'macOS, Windows und Linux', 'Updates inklusive', 'Oberfläche in 5 Sprachen'],
+        cats: { edit: 'Bearbeiten', org: 'Organisieren', ocr: 'OCR und Inhalte', sec: 'Sicherheit und Größe', from: 'Von PDF konvertieren', to: 'In PDF konvertieren' },
+        tools: {
+          edit: ['PDF bearbeiten', 'Text, Anmerkungen, Signatur und Suche'],
+          merge: ['PDF zusammenführen', 'Mehrere PDFs in einem kombinieren'],
+          split: ['PDF teilen', 'Eine Seite pro Datei'],
+          remove: ['Seiten entfernen', 'Unerwünschte Seiten löschen'],
+          organize: ['PDF organisieren', 'Seiten neu anordnen'],
+          rotate: ['Seiten drehen', 'Um 90°, 180°, 270° drehen'],
+          watermark: ['Wasserzeichen', 'Text-Überlagerung'],
+          pagenum: ['Seitenzahlen', 'Seiten nummerieren'],
+          ocr: ['OCR — Durchsuchbares PDF', 'Scans durchsuchbar machen'],
+          extract: ['Text extrahieren', 'Text als .txt exportieren'],
+          compress: ['PDF komprimieren', 'Dateigröße reduzieren'],
+          protect: ['PDF schützen', 'Passwort hinzufügen'],
+          unlock: ['PDF entsperren', 'Passwort entfernen'],
+          tojpg: ['PDF in JPG', 'Jede Seite als Bild'],
+          toword: ['PDF in Word', 'Bearbeitbares Dokument'],
+          toppt: ['PDF in PowerPoint', 'Eine Folie pro Seite'],
+          toexcel: ['PDF in Excel', 'Text in Tabellen extrahieren'],
+          topdfa: ['PDF in PDF/A', 'Archivierungsformat'],
+          imgpdf: ['Bild in PDF', 'JPG, PNG, HEIC und mehr'],
+          wordpdf: ['Word in PDF', '.doc und .docx'],
+          pptpdf: ['PowerPoint in PDF', '.ppt und .pptx'],
+          excelpdf: ['Excel in PDF', '.xls und .xlsx']
+        }
+      }
+    };
+  }
+
+  get ICONS() {
+    return {
+      edit:     { c: '#7c6cf0', d: 'M12 20h9 M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z' },
+      merge:    { c: '#e0564f', d: 'M7 3v5a4 4 0 0 0 4 4h2 M17 3v5a4 4 0 0 1-4 4 M12 12v9 M9 18l3 3 3-3' },
+      split:    { c: '#e0564f', d: 'M12 3v7 M12 10l-6 6v5 M12 10l6 6v5 M4 21h4 M16 21h4' },
+      remove:   { c: '#e0564f', d: 'M3 6h18 M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6 M10 11v6 M14 11v6' },
+      organize: { c: '#e0564f', d: 'M3 3h7v7H3Z M14 3h7v7h-7Z M3 14h7v7H3Z M14 14h7v7h-7Z' },
+      rotate:   { c: '#e0564f', d: 'M21 12a9 9 0 1 1-2.64-6.36 M21 3v5h-5' },
+      watermark:{ c: '#9a6cf0', d: 'M12 2.7s6.5 6.6 6.5 11a6.5 6.5 0 0 1-13 0c0-4.4 6.5-11 6.5-11Z' },
+      pagenum:  { c: '#9a6cf0', d: 'M4 9h16 M4 15h16 M10 3L8 21 M16 3l-2 18' },
+      ocr:      { c: '#2fa98c', d: 'M3 7V5a2 2 0 0 1 2-2h2 M17 3h2a2 2 0 0 1 2 2v2 M21 17v2a2 2 0 0 1-2 2h-2 M7 21H5a2 2 0 0 1-2-2v-2 M7 8h8 M7 12h10 M7 16h6' },
+      extract:  { c: '#2fa98c', d: 'M4 6h16 M4 11h16 M4 16h8 M17 14l3 3-3 3 M20 17h-6' },
+      compress: { c: '#4a90d9', d: 'M4 14h6v6 M20 10h-6V4 M14 10l7-7 M3 21l7-7' },
+      protect:  { c: '#6b7a99', d: 'M5 11h14v10H5Z M8 11V7a4 4 0 0 1 8 0v4' },
+      unlock:   { c: '#6b7a99', d: 'M5 11h14v10H5Z M8 11V7a4 4 0 0 1 7.8-1.3' },
+      tojpg:    { c: '#f0b429', d: 'M3 5h18v14H3Z M9 10.5a1.5 1.5 0 1 0-.01 0 M21 14l-5-5-11 11' },
+      toword:   { c: '#4a7df0', d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z M14 2v6h6 M8 13h8 M8 17h8' },
+      toppt:    { c: '#ed7d2b', d: 'M2 3h20 M4 3v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3 M12 16v3 M8 21l4-2 4 2' },
+      toexcel:  { c: '#2fa05a', d: 'M3 5h18v14H3Z M3 10h18 M3 15h18 M9 5v14 M15 5v14' },
+      topdfa:   { c: '#3d5a99', d: 'M3 4h18v4H3Z M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8 M10 12h4' },
+      imgpdf:   { c: '#f0b429', d: 'M3 5h18v14H3Z M9 10.5a1.5 1.5 0 1 0-.01 0 M21 14l-5-5-11 11' },
+      wordpdf:  { c: '#4a7df0', d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z M14 2v6h6 M8 13h8 M8 17h8' },
+      pptpdf:   { c: '#ed7d2b', d: 'M2 3h20 M4 3v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3 M12 16v3 M8 21l4-2 4 2' },
+      excelpdf: { c: '#2fa05a', d: 'M3 5h18v14H3Z M3 10h18 M3 15h18 M9 5v14 M15 5v14' }
+    };
+  }
+
+  get CATS() {
+    return [
+      { id: 'edit', tools: ['edit'] },
+      { id: 'org', tools: ['merge', 'split', 'remove', 'organize', 'rotate'] },
+      { id: 'ocr', tools: ['watermark', 'pagenum', 'ocr', 'extract'] },
+      { id: 'sec', tools: ['compress', 'protect', 'unlock'] },
+      { id: 'from', tools: ['tojpg', 'toword', 'toppt', 'toexcel', 'topdfa'] },
+      { id: 'to', tools: ['imgpdf', 'wordpdf', 'pptpdf', 'excelpdf'] }
+    ];
+  }
+
+  renderVals() {
+    const accent = this.props.accent ?? '#E02D40';
+    const lang = this.state.lang ?? (this.props.defaultLang ?? 'it');
+    const TR = this.TR;
+    const L = TR[lang] ?? TR.it;
+    const ICONS = this.ICONS;
+
+    const langs = ['it', 'en', 'es', 'fr', 'de'].map((code) => ({
+      code: code.toUpperCase(),
+      bg: code === lang ? accent : 'transparent',
+      fg: code === lang ? '#ffffff' : '#b8bdc7',
+      pick: () => {
+        this.setState({ lang: code });
+        try { localStorage.setItem('sgpdf-lang', code); } catch (e) {}
+      }
+    }));
+
+    const catDirs = ['left', 'right', 'zoom', 'left', 'right', 'zoom-rot'];
+    const categories = this.CATS.map((cat, ci) => ({
+      name: L.cats[cat.id],
+      count: cat.tools.length,
+      dir: catDirs[ci % catDirs.length],
+      tools: cat.tools.map((id) => ({
+        name: L.tools[id][0],
+        desc: L.tools[id][1],
+        icon: ICONS[id].d,
+        color: ICONS[id].c
+      }))
+    }));
+
+    if (!this._bgRefCb) this._bgRefCb = (el) => this._initCanvas(el);
+    if (!this._curRefCb) this._curRefCb = (el) => this._initCursor(el);
+    return {
+      t: L.ui,
+      accent,
+      langs,
+      categories,
+      features: L.feats.map((label) => ({ label })),
+      bgRef: this._bgRefCb,
+      curRef: this._curRefCb
+    };
+  }
+}
+</script>
+</body>
+</html>
